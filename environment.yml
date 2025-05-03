@@ -1,24 +1,25 @@
 # environment.yml
-name: ml_modelo_predictivo_estudiantil  # Nombre del entorno
+name: ml_modelo_predictivo_estudiantil
 channels:
-  - conda-forge  # Canal prioritario para paquetes actualizados
+  - conda-forge
 dependencies:
-  - python=3.9  # Versión de Python (ajusta si es necesario)
-  - pandas  # Manipulación de datos
-  - numpy  # Operaciones numéricas
-  - scikit-learn  # Modelos de ML
-  - matplotlib  # Visualización
-  - seaborn  # Visualización avanzada
-  - jupyter  # Notebooks
-  - xgboost  # Modelos de gradient boosting
-  - pip  # Instalación de paquetes desde PyPI
+  - python=3.9
+  - pandas
+  - numpy
+  - scikit-learn
+  - matplotlib
+  - seaborn
+  - jupyter
+  - notebook  # Necesario para evitar el error "no module named notebook.services"
+  - xgboost
+  - pip
 
-  # Paquetes adicionales desde PyPI
   - pip:
-    - imbalanced-learn  # Para técnicas de balanceo (SMOTE)
-    - scikit-optimize  # Optimización bayesiana
-    - shap  # Interpretación de modelos
-    - joblib  # Serialización de modelos
-    - pytest  # Pruebas unitarias
-    - flake8  # Linter para código
-    - jupyter_contrib_nbextensions  # Extensiones útiles para Jupyter
+    - imbalanced-learn  # Para SMOTE
+    - scikit-optimize
+    - shap  # Para interpretación de modelos
+    - joblib
+    - pytest  # Para pruebas unitarias
+    - flake8  # Para linting
+    - jupyter_contrib_nbextensions  # Opcional (extensiones útiles para Jupyter)
+    - nbconvert  # Para exportar notebooks a HTML/PDF
