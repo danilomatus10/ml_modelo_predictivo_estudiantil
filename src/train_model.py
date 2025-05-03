@@ -1,54 +1,57 @@
+# src/train_model.py
 import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report
 import joblib
-from src.config import RAW_DATA, MODELS_DIR
-from src.preprocessing import DataPreprocessor, clean_columns
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.ensemble import RandomForestClassifier
+from xgboost import XGBClassifier
+from sklearn.metrics import classification_report, roc_auc_score
+from skopt import BayesSearchCV
+from config import MODEL_PATH
 
-def load_and_validate_data():
-    """Carga y valida estructura básica de los datos"""
-    df = pd.read_csv(RAW_DATA, encoding='utf-8', skipinitialspace=True)
-    df = clean_columns(df)
+def train_models():
+    X = pd.read_csv('data/processed/X_processed.csv')
+    y = pd.read_csv('data/processed/y.csv').squeeze()
     
-    # Validación crítica
-    required_columns = {'target', 'previous_qualification_grade', 'admission_grade'}
-    missing = required_columns - set(df.columns)
-    if missing:
-        raise KeyError(f'Columnas esenciales faltantes: {missing}')
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
     
-    return df
-
-def main():
-    # 1. Cargar y validar datos
-    df = load_and_validate_data()
-    df['target'] = df['target'].str.strip().replace({'': None}).dropna()
+    # Random Forest con GridSearch
+    rf_params = {
+        'n_estimators': [100, 200],
+        'max_depth': [None, 10, 20],
+        'min_samples_split': [2, 5]
+    }
     
-    # 2. Preparar datos
-    X = df.drop('target', axis=1)
-    y = df['target']
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, stratify=y, random_state=42
-    )
+    grid_rf = GridSearchCV(RandomForestClassifier(), rf_params, cv=5, scoring='f1')
+    grid_rf.fit(X_train, y_train)
     
-    # 3. Pipeline de modelado
-    pipeline = Pipeline([
-        ('preprocessing', DataPreprocessor()),
-        ('classifier', RandomForestClassifier(
-            n_estimators=200,
-            class_weight='balanced',
-            random_state=42
-        ))
-    ])
+    # XGBoost con Bayesian Optimization
+    xgb_params = {
+        'n_estimators': (50, 200),
+        'max_depth': (3, 10),
+        'learning_rate': (0.01, 0.3, 'log-uniform')
+    }
     
-    # 4. Entrenar y evaluar
-    pipeline.fit(X_train, y_train)
-    y_pred = pipeline.predict(X_test)
-    print(classification_report(y_test, y_pred, zero_division=0))
+    bayes_xgb = BayesSearchCV(XGBClassifier(use_label_encoder=False), xgb_params, n_iter=30, cv=5, scoring='f1')
+    bayes_xgb.fit(X_train, y_train)
     
-    # 5. Guardar modelo
-    joblib.dump(pipeline, MODELS_DIR / 'best_model.pkl')
-    print(f'Modelo guardado en: {MODELS_DIR/"best_model.pkl"}')
+    # Comparar modelos
+    models = {
+        'Random Forest': grid_rf,
+        'XGBoost': bayes_xgb
+    }
+    
+    results = []
+    for name, model in models.items():
+        y_pred = model.predict(X_test)
+        f1 = f1_score(y_test, y_pred)
+        auc = roc_auc_score(y_test, model.predict_proba(X_test)[:, 1])
+        results.append((name, f1, auc))
+        print(f"{name} - F1: {f1:.4f}, AUC: {auc:.4f}")
+    
+    # Guardar mejor modelo
+    best_model = max(models.values(), key=lambda x: x.best_score_)
+    joblib.dump(best_model, MODEL_PATH)
+    print(f"Mejor modelo guardado en {MODEL_PATH}")
 
 if __name__ == "__main__":
-    main()
+    train_models()
