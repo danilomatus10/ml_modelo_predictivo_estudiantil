@@ -20,23 +20,18 @@ def preprocess_data():
 
         # Limpiar y mapear 'Target'
         print("🧹 Paso 2: Limpieza de Target...")
-        # Convertir a string y limpiar espacios
         df['Target'] = df['Target'].astype(str).str.strip()
-        
-        # Mantener solo filas con valores válidos
         valid_labels = ['Dropout', 'Graduate']
         df = df[df['Target'].isin(valid_labels)]
-        
-        # Mapear a 0 y 1
         df['Target'] = df['Target'].map({'Dropout': 0, 'Graduate': 1})
-        
-        # Validar que y no tenga NaN
+
+        print(f"✅ Valores únicos en Target después del mapeo: {df['Target'].unique()}")
+
+        # Validar que no haya NaN en Target
         if df['Target'].isnull().any():
             print("❌ Advertencia: Hay valores NaN en 'Target' después del mapeo")
             print("🔍 Valores únicos en 'Target':", df['Target'].unique())
             raise ValueError("La columna 'Target' contiene valores no válidos")
-
-        print(f"✅ Valores únicos en Target después del mapeo: {df['Target'].unique()}")
 
         # Feature Engineering
         print("🛠️ Paso 3: Feature Engineering...")
@@ -58,7 +53,6 @@ def preprocess_data():
             "Mother's qualification", "Father's qualification",
             "Mother's occupation", "Father's occupation"
         ]
-        
         numeric_cols = X.select_dtypes(include=[np.number]).columns.tolist()
         print(f"🔢 Columnas numéricas: {numeric_cols}")
         print(f"🔤 Columnas categóricas: {categorical_cols}")

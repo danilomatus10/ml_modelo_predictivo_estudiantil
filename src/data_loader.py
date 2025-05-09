@@ -3,13 +3,13 @@ import pandas as pd
 from config import RAW_DATA_PATH, PROCESSED_DATA_PATH
 
 def load_and_clean_data():
-    # Cargar datos
+    # Cargar datos originales
     df = pd.read_csv(RAW_DATA_PATH, delimiter=';', low_memory=False)
     
     # Corregir nombres de columnas
     df.columns = df.columns.str.replace('\n', '').str.strip()
     
-    # Eliminar filas con valores faltantes críticos (>30%)
+    # Eliminar filas con valores faltantes críticos (>30% de columnas vacías)
     threshold = len(df.columns) - int(0.3 * len(df.columns))
     df = df.dropna(thresh=threshold)
     

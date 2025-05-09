@@ -1,14 +1,22 @@
 # src/train_model.py
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 from sklearn.metrics import classification_report, roc_auc_score
+from skopt import BayesSearchCV
+from skopt.space import Real, Integer
 import joblib
 from config import MODEL_PATH
 
 def train_models():
+    X = pd.read_csv('data/processed/X_processed.csv')
+    
+    # Validar que todas las columnas sean numéricas
+    if not X.dtypes.apply(lambda dtype: pd.api.types.is_numeric_dtype(dtype)).all():
+        raise ValueError("❌ X contiene valores no numéricos. Revisa el preprocesamiento.")
+    
     try:
         print("📥 Cargando datos procesados...")
         X = pd.read_csv('data/processed/X_processed.csv')
@@ -17,8 +25,8 @@ def train_models():
         print(f"📊 Dimensiones de X: {X.shape}, y: {y.shape}")
 
         # Validar que todos los valores sean numéricos
-        if not np.issubdtype(X.dtypes[0], np.number):
-            raise ValueError("❌ X contiene valores no numéricos. Verifica el preprocesamiento.")
+        if not X.apply(lambda col: pd.to_numeric(col, errors='coerce')).notnull().all().all():
+            raise ValueError("❌ Algunas columnas en X no son numéricas. Revisa el preprocesamiento.")
 
         print("🧮 Dividiendo datos en entrenamiento y prueba...")
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
@@ -36,27 +44,39 @@ def train_models():
 
         print(f"✅ Mejor Random Forest: {grid_rf.best_params_}")
         y_pred_rf = grid_rf.predict(X_test)
-        print("📊 Reporte de clasificación (Random Forest):")
+        print("📊 Informe de clasificación (Random Forest):")
         print(classification_report(y_test, y_pred_rf))
 
-        # Entrenar XGBoost con GridSearchCV
-        print("🚀 Entrenando XGBoost...")
-        param_grid_xgb = {
-            'n_estimators': [100, 200],
-            'max_depth': [3, 6],
-            'learning_rate': [0.01, 0.1]
+        # Entrenar XGBoost con Bayesian Search
+        print("🚀 Entrenando XGBoost con Bayesian Optimization...")
+        param_grid_bayes = {
+            'n_estimators': Integer(50, 200),
+            'max_depth': Integer(3, 10),
+            'learning_rate': Real(0.01, 0.3, prior='log-uniform')
         }
 
-        grid_xgb = GridSearchCV(XGBClassifier(use_label_encoder=False, eval_metric='logloss'), param_grid_xgb, cv=5, scoring='f1', n_jobs=-1)
-        grid_xgb.fit(X_train, y_train)
+        bayes_search = BayesSearchCV(
+            XGBClassifier(use_label_encoder=False, eval_metric='logloss'),
+            param_grid_bayes,
+            n_iter=30,
+            cv=5,
+            scoring='f1',
+            n_jobs=-1
+        )
+        bayes_search.fit(X_train, y_train)
 
-        print(f"✅ Mejor XGBoost: {grid_xgb.best_params_}")
-        y_pred_xgb = grid_xgb.predict(X_test)
-        print("📊 Reporte de clasificación (XGBoost):")
+        print(f"✅ Mejor XGBoost (Bayesian): {bayes_search.best_params_}")
+        y_pred_xgb = bayes_search.predict(X_test)
+        print("📊 Informe de clasificación (XGBoost):")
         print(classification_report(y_test, y_pred_xgb))
 
+        # Validación cruzada
+        print("🔁 Validación cruzada (F1-Score):")
+        scores = cross_val_score(bayes_search.best_estimator_, X_train, y_train, cv=5, scoring='f1')
+        print(f"📊 F1-Score: {scores.mean():.2f} ± {scores.std():.2f}")
+
         # Guardar mejor modelo
-        best_model = grid_xgb
+        best_model = bayes_search
         joblib.dump(best_model, MODEL_PATH)
         print(f"💾 Modelo guardado en {MODEL_PATH}")
 

@@ -10,16 +10,15 @@ dependencies:
   - matplotlib
   - seaborn
   - jupyter
-  - notebook  # Necesario para evitar el error "no module named notebook.services"
+  - notebook
   - xgboost
   - pip
 
   - pip:
-    - imbalanced-learn  # Para SMOTE
+    - imbalanced-learn
     - scikit-optimize
-    - shap  # Para interpretación de modelos
+    - shap
     - joblib
-    - pytest  # Para pruebas unitarias
-    - flake8  # Para linting
-    - jupyter_contrib_nbextensions  # Opcional (extensiones útiles para Jupyter)
-    - nbconvert  # Para exportar notebooks a HTML/PDF
+    - pytest
+    - flake8
+    - nbconvert

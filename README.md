@@ -16,72 +16,70 @@ pip install imbalanced-learn shap
 
 ml_modelo_predictivo_estudiantil/
 ├── data/
-│   ├── raw/                   # Datos originales (data.csv)
-│   └── processed/             # Datos limpios (cleaned_data.csv)
+│   ├── raw/                   # Datos originales (no versionados)
+│   │   └── data.csv         # Archivo CSV original
+│   └── processed/             # Datos procesados
+│       ├── cleaned_data.csv   # Datos limpios
+│       ├── X_processed.csv    # Datos procesados
+│       └── y.csv            # Etiquetas
 │
-├── notebooks/                 # Análisis y visualizaciones
-│   ├── 01_EDA.ipynb           # Análisis Exploratorio de Datos
-│   └── 03_Resultados.ipynb    # Resultados del modelo y métricas
+├── notebooks/                 # Notebooks Jupyter
+│   ├── 01_EDA.ipynb         # Análisis Exploratorio
+│   ├── 02_Clustering.ipynb   # Análisis de clústeres
+│   └── 03_Resultados.ipynb  # Resultados del modelo
 │
 ├── src/                       # Código fuente
 │   ├── config.py              # Configuración de rutas
-│   ├── data_loader.py         # Carga y limpieza de datos
-│   ├── preprocessing.py       # Preprocesamiento y Feature Engineering
-│   └── train_model.py         # Entrenamiento del modelo
+│   ├── data_loader.py         # Carga de datos
+│   ├── preprocessing.py       # Pipelines de preprocesamiento
+│   └── train_model.py         # Entrenamiento de modelos
 │
-├── models/                    # Modelos entrenados (best_model.pkl)
-├── reports/                   # Informes generados (HTML/PDF)
-└── tests/                     # Pruebas unitarias
+├── models/                    # Modelos entrenados
+│   └── best_model.pkl        # Modelo serializado
+│
+├── reports/                   # Informes y visualizaciones
+│   ├── EDA_Report.html
+│   ├── feature_importance.png
+│   ├── clusters_visualization.png
+│   ├── confusion_matrix.png
+│   └── shap_importance.png
+│
+├── tests/                     # Pruebas unitarias
+│   ├── test_preprocessing.py
+│   └── test_data_loading.py
+│
+├── environment.yml            # Entorno actualizado
+└── README.md                  # Documentación del proyecto
 
 ▶️ Ejecución del Proyecto
 
-# 1. Coloca el archivo data.csv en data/raw/
-# 2. Activa el entorno
-conda activate ml_modelo_predictivo_estudiantil
-
-# 3. Cargar y limpiar datos
+# 1. Cargar y limpiar datos
 python src/data_loader.py
 
-# 4. Preprocesamiento (genera X_processed.csv y y.csv)
+# 2. Preprocesamiento (con validación de datos numéricos)
 python src/preprocessing.py
 
-# 5. Análisis Exploratorio (opcional)
-jupyter notebook notebooks/01_EDA.ipynb
-
-# 6. Entrenamiento del modelo
+# 3. Entrenamiento con Bayesian Search
 python src/train_model.py
 
-# 7. Generar informe del EDA
-mkdir -p reports
+# 4. Generar informe EDA
 jupyter nbconvert --to html notebooks/01_EDA.ipynb --output reports/EDA_Report.html
 
-# 8. Ejecutar pruebas unitarias
+# 5. Análisis de clústeres
+jupyter notebook notebooks/02_Clustering.ipynb
+
+# 6. Análisis de resultados
+jupyter notebook notebooks/03_Resultados.ipynb
+
+# 7. Ejecutar pruebas unitarias
 pytest tests/
 
-📊 Resultados Clave 
-Métricas del Modelo Final (XGBoost Optimizado): 
 
-F1-Score
-	
-0.83
-AUC-ROC
-	
-0.91
-Accuracy
-	
-0.87
-
-Características Más Relevantes: 
-
-    Nota de admisión (Admission grade)
-    Tasa de aprobación primer semestre (Approval_rate_1st_sem)
-    Índice económico (Economic_index)
-     
 📋 Autores 
 
     Hubert Gutiérrez   
-    Danulo Matus   
-    Emilley Roque 
+    Danilo Matus   
+    Enllely Roque 
 
 
 🛠️ Resolución de Problemas Comunes 
