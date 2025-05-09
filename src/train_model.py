@@ -80,9 +80,35 @@ def train_models():
         joblib.dump(best_model, MODEL_PATH)
         print(f"💾 Modelo guardado en {MODEL_PATH}")
 
+        # Bayesian Search para XGBoost
+        print("🚀 Entrenando XGBoost con Bayesian Optimization...")
+        param_grid_bayes = {
+            'n_estimators': Integer(50, 200),
+            'max_depth': Integer(3, 10),
+            'learning_rate': Real(0.01, 0.3, prior='log-uniform')
+        }
+
+        bayes_search = BayesSearchCV(
+            XGBClassifier(use_label_encoder=False, eval_metric='logloss'),
+            param_grid_bayes,
+            n_iter=30,
+            cv=5,
+            scoring='f1',
+            n_jobs=-1
+        )
+        
+        bayes_search.fit(X_train, y_train)
+
+        print(f"✅ Mejor XGBoost (Bayesian): {bayes_search.best_params_}")
+        y_pred_xgb = bayes_search.predict(X_test)
+        print("📊 Reporte de clasificación (XGBoost):")
+        print(classification_report(y_test, y_pred_xgb))
+        
+
     except Exception as e:
         print(f"❌ Error durante el entrenamiento: {str(e)}")
         raise
+    
 
 if __name__ == "__main__":
     train_models()

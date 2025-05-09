@@ -24,21 +24,40 @@ Se comparan múltiples algoritmos y se aplican métodos de interpretación para 
 % Contexto, motivación y objetivos
 
 \section{Datos}
-% Fuente, estructura, preprocesamiento y particionamiento
+% Fuente de los datos: institución educativa
+% Estructura: 31 columnas, ~4k registros
+% Preprocesamiento: limpieza, Feature Engineering, SMOTE
 
 \section{Metodología}
-% Algoritmos usados (Random Forest, XGBoost)
-% Feature Engineering
-% Optimización de hiperparámetros (GridSearchCV, BayesSearchCV)
+% Algoritmos: Random Forest, XGBoost
+% Técnicas: Feature Engineering, SMOTE, GridSearchCV, BayesSearchCV
+% Arquitectura del modelo: pipeline completo
 
 \section{Resultados}
-% Métricas cuantitativas: F1-Score, AUC-ROC, Accuracy
-% Comparación de modelos
-% Interpretación con SHAP
+% Métricas: F1-Score 0.83, AUC-ROC 0.91
+% Comparación de modelos:
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+Método & F1 & AUC & Accuracy & Recall \\
+\hline
+Random Forest & 0.81 & 0.88 & 0.85 & 0.78 \\
+XGBoost & 0.83 & 0.91 & 0.87 & 0.82 \\
+\hline
+\end{tabular}
+
+% Análisis de errores y limitaciones:
+
+    
+- Limitación: datos históricos de una sola institución
+    
+- No se incluyó NLP por falta de datos de texto
+    
+- Alto costo computacional en Bayesian Optimization
+
 
 \section{Conclusión}
-% Contribuciones del modelo
-% Recomendaciones para futuros trabajos
+% Contribución: modelo predictivo con F1 0.83
+% Recomendaciones: integrar el modelo en sistema académico, usar datos de más instituciones
 
 \bibliographystyle{apa}
 \begin{thebibliography}{9}
