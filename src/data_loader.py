@@ -1,24 +1,30 @@
 # src/data_loader.py
 import pandas as pd
-from config import RAW_DATA_PATH, PROCESSED_DATA_PATH
+from src.config import RAW_DATA_PATH, PROCESSED_DATA_PATH
 
 def load_and_clean_data():
-    # Cargar datos con delimitador y codificación correctos
-    df = pd.read_csv(RAW_DATA_PATH, delimiter=';', low_memory=False, encoding='utf-8')
+    print("📥 Cargando y limpiando datos...")
     
-    # Corregir nombres de columnas (eliminar espacios y saltos de línea)
+    # Cargar datos con delimitador correcto
+    df = pd.read_csv(RAW_DATA_PATH, delimiter=';', low_memory=False)
+    
+    # Corregir nombres de columnas
     df.columns = df.columns.str.replace('\n', '').str.strip()
     
-    # Eliminar filas con valores faltantes críticos
+    # Eliminar filas con >30% de valores faltantes
     threshold = len(df.columns) - int(0.3 * len(df.columns))
     df = df.dropna(thresh=threshold)
     
-    # ✅ Asegurarse de que 'Target' esté presente
-    if 'Target' not in df.columns:
-        raise ValueError("❌ Columna 'Target' no encontrada en los datos")
+    # Imputar valores faltantes en columnas numéricas con mediana
+    numeric_cols = df.select_dtypes(include=[float, int]).columns
+    df[numeric_cols] = df[numeric_cols].fillna(df[numeric_cols].median())
     
-    # Guardar con delimitador correcto
-    df.to_csv(PROCESSED_DATA_PATH, index=False, sep=';')  # ← Usa el mismo delimitador
+    # Validar que 'Target' esté presente
+    if 'Target' not in df.columns:
+        raise ValueError("❌ Columna 'Target' no encontrada")
+    
+    # Guardar datos limpios con delimitador ';'
+    df.to_csv(PROCESSED_DATA_PATH, index=False, sep=';', encoding='utf-8')
     print(f"Datos limpios guardados en {PROCESSED_DATA_PATH}")
 
 if __name__ == "__main__":

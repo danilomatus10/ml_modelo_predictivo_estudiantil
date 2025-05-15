@@ -1,4 +1,4 @@
-# src/config.py
+# config.py
 import os
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

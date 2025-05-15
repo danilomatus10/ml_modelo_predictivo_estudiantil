@@ -1,4 +1,46 @@
-# Modelo Predictivo de Deserción Estudiantil
+# Modelo Predictivo de Deserción Estudiantil 🎓
+
+## 📁 Archivos generados
+| Archivo | Propósito | Justificación |
+|--------|----------|---------------|
+| `cleaned_data.csv` | Datos limpios y validados | Para evitar repetir limpieza cada vez que se cargan datos |
+| `X_processed.csv` | Características procesadas | Listas para entrenamiento (numéricas, escaladas, balanceadas) |
+| `y.csv` | Variable objetivo | Etiquetas binarias (0, 1) para clasificación |
+| `best_model.pkl` | Modelo entrenado | Reutilización sin reentrenamiento |
+
+# 1. Cargar y limpiar datos
+python src/data_loader.py
+
+# 2. Preprocesamiento (con conversión a denso)
+python src/preprocessing.py
+
+# 3. Entrenamiento con Bayesian Search
+python src/train_model.py
+
+# 4. Análisis exploratorio
+jupyter notebook notebooks/01_EDA.ipynb
+
+# 5. Análisis de clústeres
+jupyter notebook notebooks/02_Clustering.ipynb
+
+# 6. Análisis de resultados
+jupyter notebook notebooks/03_Resultados.ipynb
+
+# 7. Generar informe EDA
+jupyter nbconvert --to html notebooks/01_EDA.ipynb --output reports/EDA_Report.html
+
+# 8. Ejecutar pruebas unitarias
+pytest tests/
+
+## ¿Por qué generamos `X_processed.csv` y `y.csv`?
+Estos archivos contienen:
+- **`X_processed.csv`**: Características procesadas (escaladas, codificadas y balanceadas)
+- **`y.csv`**: Variable objetivo (`Target`) con etiquetas `0` (Dropout) y `1` (Graduate)
+
+### ¿Por qué los separamos?
+- **Reproducibilidad**: Permite reentrenar modelos sin repetir todo el preprocesamiento
+- **Eficiencia**: Mejora el rendimiento al cargar solo las características o el objetivo por separado
+- **Claridad**: Facilita la interpretación y documentación del proceso
 
 🧰 Instalación
 # 1. Clonar el repositorio

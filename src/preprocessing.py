@@ -4,37 +4,23 @@ import numpy as np
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.compose import ColumnTransformer
 from imblearn.over_sampling import SMOTE
-from config import PROCESSED_DATA_PATH
+from src.config import PROCESSED_DATA_PATH
 import os
-import sys
-
-# Añadir el directorio raíz al path de Python
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(project_root)
 
 def preprocess_data():
-    """Procesa los datos limpios y genera conjuntos de entrenamiento con validación completa"""
     try:
         print("🔍 Paso 1: Leyendo datos...")
+        # Cargar con delimitador correcto
         df = pd.read_csv(PROCESSED_DATA_PATH, delimiter=';', low_memory=False)
         
-        # Mostrar diagnóstico
-        print(f"📊 Columnas en cleaned_data.csv: {df.columns.tolist()}")
-        
-        # Validar que 'Target' exista
+        # Diagnóstico de columnas
+        print("📊 Columnas en cleaned_data.csv:", df.columns.tolist())
+        print("🔍 Primeras filas:")
+        print(df.head().to_string())
+
+        # Validar que 'Target' esté presente
         if 'Target' not in df.columns:
-            raise KeyError("❌ Columna 'Target' no encontrada en los datos procesados")
-        
-        # Corregir nombres de columnas
-        df.columns = df.columns.str.replace('\n', '').str.strip()
-        
-        # Validar que el archivo tenga datos
-        if df.empty:
-            raise ValueError("⚠️ El archivo 'cleaned_data.csv' está vacío.")
-            
-        print(f"📊 Dimensiones iniciales: {df.shape}")
-        print(f"🔢 Cantidad de columnas numéricas: {len(df.select_dtypes(include=[np.number]).columns)}")
-        print(f"🔤 Cantidad de columnas categóricas: {len(df.select_dtypes(include=['object']).columns)}")
+            raise KeyError("❌ Columna 'Target' no encontrada")
 
         # Limpiar y mapear 'Target'
         print("🧹 Paso 2: Limpieza de Target...")
@@ -44,22 +30,14 @@ def preprocess_data():
         df['Target'] = df['Target'].map({'Dropout': 0, 'Graduate': 1})
 
         if df['Target'].isnull().any():
-            print("❌ Advertencia: Hay valores NaN en 'Target' después del mapeo")
-            print("🔍 Valores únicos en 'Target':", df['Target'].unique())
+            print("❌ Advertencia: Valores NaN en 'Target'")
             raise ValueError("La columna 'Target' contiene valores no válidos")
-
-        print(f"✅ Valores únicos en Target después del mapeo: {df['Target'].unique()}")
 
         # Feature Engineering
         print("🛠️ Paso 3: Feature Engineering...")
-        # GPA normalizado
         df['GPA_1st_sem'] = df['Curricular units 1st sem (grade)'] / 20
-        
-        # Tasa de aprobación
         df['Approval_rate_1st_sem'] = df['Curricular units 1st sem (approved)'] / df['Curricular units 1st sem (enrolled)']
         df['Approval_rate_1st_sem'] = df['Approval_rate_1st_sem'].replace([np.inf, -np.inf], np.nan).fillna(0)
-        
-        # Índice económico
         df['Economic_index'] = (df['Unemployment rate'] + df['Inflation rate']) / df['GDP']
         df['Economic_index'] = df['Economic_index'].replace([np.inf, -np.inf], np.nan).fillna(0)
 
@@ -75,10 +53,7 @@ def preprocess_data():
             "Mother's qualification", "Father's qualification",
             "Mother's occupation", "Father's occupation"
         ]
-        
         numeric_cols = X.select_dtypes(include=[np.number]).columns.tolist()
-        print(f"🔢 Columnas numéricas: {numeric_cols}")
-        print(f"🔤 Columnas categóricas: {categorical_cols}")
 
         # Pipeline de preprocesamiento
         print("🛠️ Paso 6: Aplicando preprocesamiento...")
@@ -89,25 +64,18 @@ def preprocess_data():
 
         X_processed = preprocessor.fit_transform(X)
 
-        # ✅ Convertir a matriz densa antes de guardar
-        print(".Dense paso 7: Convirtiendo a matriz densa...")
-        X_processed = X_processed.toarray()  # ← Importante: convierte de sparse a dense
-
-        # Aplicar SMOTE
-        print("🔁 Paso 8: Aplicando SMOTE para balancear clases...")
-        smote = SMOTE(random_state=42)
-        X_resampled, y_resampled = smote.fit_resample(X_processed, y)
+        # ✅ Conversión a matriz densa
+        X_resampled, y_resampled = SMOTE(random_state=42).fit_resample(X_processed.toarray(), y)
 
         # Validar que todos los valores sean numéricos
-        print("🧮 Paso 9: Validando tipos numéricos...")
         if not np.issubdtype(X_resampled.dtype, np.number):
-            raise ValueError("❌ X_resampled contiene valores no numéricos después de .toarray()")
+            raise ValueError("❌ X_resampled contiene valores no numéricos")
 
         # Crear directorio si no existe
         os.makedirs('data/processed', exist_ok=True)
 
         # Guardar datos procesados
-        print("💾 Paso 10: Guardando datos procesados...")
+        print("💾 Paso 7: Guardando datos procesados...")
         pd.DataFrame(X_resampled).to_csv('data/processed/X_processed.csv', index=False)
         pd.Series(y_resampled).to_csv('data/processed/y.csv', index=False)
         print("✅ Archivos generados correctamente en 'data/processed/'")
